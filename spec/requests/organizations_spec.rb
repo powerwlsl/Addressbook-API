@@ -5,9 +5,8 @@ RSpec.describe 'Addressbook API', type: :request do
   let!(:organizations) { create_list(:organization, 10) }
   let(:organization_id) { organizations.first.id }
 
-  # Test suite for GET /organizations
+  # Test for GET /organizations
   describe 'GET /organizations' do
-    # make HTTP get request before each example
     before { get '/organizations' }
 
     it 'returns organizations' do
@@ -21,7 +20,7 @@ RSpec.describe 'Addressbook API', type: :request do
     end
   end
 
-  # Test suite for GET /organizations/:id
+  # Test for GET /organizations/:id
   describe 'GET /organizations/:id' do
     before { get "/organizations/#{organization_id}" }
 
@@ -50,9 +49,8 @@ RSpec.describe 'Addressbook API', type: :request do
     end
   end
 
-  # Test suite for POST /organizations
+  # Test for POST /organizations
   describe 'POST /organizations' do
-    # valid payload
     let(:valid_attributes) { { name: 'STRV'} }
 
     context 'when the request is valid' do
@@ -82,7 +80,7 @@ RSpec.describe 'Addressbook API', type: :request do
     end
   end
 
-  # Test suite for PUT /todos/:id
+  # Test for PUT /todos/:id
   describe 'PUT /organizations/:id' do
     let(:valid_attributes) { { name: 'HJCompany' } }
 
@@ -99,7 +97,7 @@ RSpec.describe 'Addressbook API', type: :request do
     end
   end
 
-  # Test suite for DELETE /todos/:id
+  # Test for DELETE /todos/:id
   describe 'DELETE /organizations/:id' do
     before { delete "/organizations/#{organization_id}" }
 

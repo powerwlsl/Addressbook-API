@@ -4,7 +4,7 @@ class OrganizationsController < ApplicationController
   # GET /organizations
   def index
     @organizations = Organization.all
-    render json: @organization, status: :ok
+    render json: @organizations, status: :ok
   end
 
   # POST /organizations
@@ -34,7 +34,7 @@ class OrganizationsController < ApplicationController
 
   def organization_params
     # whitelist params
-    params.permit(:title, :created_by)
+    params.permit(:name)
   end
 
   def set_organization
