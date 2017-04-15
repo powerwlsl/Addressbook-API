@@ -5,6 +5,8 @@ require 'spec_helper'
 require 'rspec/rails'
 require 'database_cleaner'
 
+ActiveRecord::Migration.maintain_test_schema!
+
 Shoulda::Matchers.configure do |config|
   config.integrate do |with|
     with.test_framework :rspec
@@ -12,7 +14,6 @@ Shoulda::Matchers.configure do |config|
   end
 end
 
-ActiveRecord::Migration.maintain_test_schema!
 RSpec.configure do |config|
   config.include FactoryGirl::Syntax::Methods
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
