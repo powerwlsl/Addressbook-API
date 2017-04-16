@@ -3,6 +3,7 @@ require 'rails_helper'
 RSpec.describe 'Organizations API', type: :request do
   # initialize test data
   let(:user) { create(:user) }
+  let(:headers) { valid_headers.except('Authorization') }
 
   # Test for GET /organizations
   describe 'GET /organizations' do
@@ -21,23 +22,18 @@ RSpec.describe 'Organizations API', type: :request do
   # Test for POST /organizations
   describe 'POST /organizations' do
     it "doesn't allow a non-admin user to create" do
-      # 2. execute system under test
       post "/organizations", params: {name: "Org"}.to_json, headers: valid_headers
 
-      # 3. assertion - verify that behavior is what i wanted
       expect(response.status).to eq(401)
       expect(response.body).to eq("Unauthorized request")
     end
 
     it "allows a admin user to create" do
-      # 1. set up - you're testing a specific situation
       user = create :user, :admin
 
-      # 2. execute system under test
       post "/organizations", params: {name: "Org"}.to_json,
        headers: valid_headers(user)
 
-      # 3. assertion - verify that behavior is what i wanted
       expect(response.status).to eq(201)
       json = JSON.parse(response.body)
       expect(json['name']).to eq("Org")
@@ -50,10 +46,8 @@ RSpec.describe 'Organizations API', type: :request do
   describe 'DELETE /organizations' do
     it "doesn't allow a non-admin user to delete" do
       org = create :organization
-      # 2. execute system under test
       delete "/organizations/#{org.id}", headers: valid_headers
 
-      # 3. assertion - verify that behavior is what i wanted
       expect(response.status).to eq(401)
       expect(response.body).to eq("Unauthorized request")
 
@@ -61,13 +55,10 @@ RSpec.describe 'Organizations API', type: :request do
     end
 
     it "allows an admin user to delete" do
-      # 1. set up - you're testing a specific situation
       org = create :organization
       user = create :user, :admin
-      # 2. execute system under test
       delete "/organizations/#{org.id}", headers: valid_headers(user)
 
-      # 3. assertion - verify that behavior is what i wanted
       expect(response.status).to eq(204)
       expect{ org.reload }.to raise_error(ActiveRecord::RecordNotFound)
     end
@@ -88,6 +79,35 @@ RSpec.describe 'Organizations API', type: :request do
 
       expect(response.status).to eq(204)
       expect(Organization.find_by_name("New Company")).to be_present
+    end
+  end
+
+  describe 'GET /organizations/:id/users' do
+    context "when the user is not a member of the organization" do 
+      it "doesn't show other members of the organization" do
+        org = create_list(:organization, 3).first
+        create :user, :member1
+        create :user, :member2
+        user = create :user, :member3
+    
+        get "/organizations/#{org.id}/organizations_users", headers: valid_headers(user)
+
+        expect(response.status).to eq(401)
+        expect(response.body).to eq("Unauthorized request")
+      end
+    end
+
+    context "when the user is a member of the organization" do 
+      it "shows other members of the organization" do
+        org = create_list(:organization, 3).first
+        user = create :user, :member1
+        create :user, :member2
+        create :user, :member3
+        get "/organizations/#{org.id}/organizations_users", headers: valid_headers(user)
+
+        expect(response.status).to eq(200)
+        expect(Organization.find(org.id).users.count).to eq(2)
+      end
     end
   end
 end

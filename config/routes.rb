@@ -1,10 +1,10 @@
 Rails.application.routes.draw do
   resources :users do
-    resources :organizationsusers
+    resources :organizations_users
   end
 
   resources :organizations do
-    resources :organizationsusers, only: [:index,:create]
+    resources :organizations_users, only: [:index,:create]
   end
 
   namespace :admin do 

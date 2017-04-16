@@ -10,4 +10,8 @@ class User < ApplicationRecord
   def admin?
     ADMIN_EMAILS.include? email
   end
+
+  def member?(organization)
+    organization_ids.include? organization.id
+  end
 end
