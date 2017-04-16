@@ -1,108 +1,93 @@
 require 'rails_helper'
 
-RSpec.describe 'Addressbook API', type: :request do
-  # initialize test data 
-  let!(:organizations) { create_list(:organization, 10) }
-  let(:organization_id) { organizations.first.id }
+RSpec.describe 'Organizations API', type: :request do
+  # initialize test data
+  let(:user) { create(:user) }
 
   # Test for GET /organizations
   describe 'GET /organizations' do
-    before { get '/organizations' }
-
     it 'returns organizations' do
+      create_list(:organization, 3)
+
+      get '/organizations'
+
       json = JSON.parse(response.body)
       expect(json).not_to be_empty
-      expect(json.size).to eq(10)
-    end
-
-    it 'returns status code 200' do
+      expect(json.size).to eq(3)
       expect(response).to have_http_status(200)
-    end
-  end
-
-  # Test for GET /organizations/:id
-  describe 'GET /organizations/:id' do
-    before { get "/organizations/#{organization_id}" }
-
-    context 'when the record exists' do
-      it 'returns the organization' do
-        json = JSON.parse(response.body)
-        expect(json).not_to be_empty
-        expect(json['id']).to eq(organization_id)
-      end
-
-      it 'returns status code 200' do
-        expect(response).to have_http_status(200)
-      end
-    end
-
-    context 'when the record does not exist' do
-      let(:organization_id) { 100 }
-
-      it 'returns status code 404' do
-        expect(response).to have_http_status(404)
-      end
-
-      it 'returns a not found message' do
-        expect(response.body).to match(/Couldn't find Organization/)
-      end
     end
   end
 
   # Test for POST /organizations
   describe 'POST /organizations' do
-    let(:valid_attributes) { { name: 'STRV'} }
+    it "doesn't allow a non-admin user to create" do
+      # 2. execute system under test
+      post "/organizations", params: {name: "Org"}.to_json, headers: valid_headers
 
-    context 'when the request is valid' do
-      before { post '/organizations', params: valid_attributes }
-
-      it 'creates a organization' do
-        json = JSON.parse(response.body)
-        expect(json['name']).to eq('STRV')
-      end
-
-      it 'returns status code 201' do
-        expect(response).to have_http_status(201)
-      end
+      # 3. assertion - verify that behavior is what i wanted
+      expect(response.status).to eq(401)
+      expect(response.body).to eq("Unauthorized request")
     end
 
-    context 'when the request is invalid' do
-      before { post '/organizations', params: { name: '' } }
+    it "allows a admin user to create" do
+      # 1. set up - you're testing a specific situation
+      user = create :user, :admin
 
-      it 'returns status code 422' do
-        expect(response).to have_http_status(422)
-      end
+      # 2. execute system under test
+      post "/organizations", params: {name: "Org"}.to_json,
+       headers: valid_headers(user)
 
-      it 'returns a validation failure message' do
-        expect(response.body)
-          .to match(/Validation failed: Name can't be blank/)
-      end
+      # 3. assertion - verify that behavior is what i wanted
+      expect(response.status).to eq(201)
+      json = JSON.parse(response.body)
+      expect(json['name']).to eq("Org")
+
+      expect(Organization.find_by_name("Org")).to be_present
     end
   end
 
-  # Test for PUT /todos/:id
+  # Test for POST /organizations
+  describe 'DELETE /organizations' do
+    it "doesn't allow a non-admin user to delete" do
+      org = create :organization
+      # 2. execute system under test
+      delete "/organizations/#{org.id}", headers: valid_headers
+
+      # 3. assertion - verify that behavior is what i wanted
+      expect(response.status).to eq(401)
+      expect(response.body).to eq("Unauthorized request")
+
+      expect(org.reload).to be_present
+    end
+
+    it "allows an admin user to delete" do
+      # 1. set up - you're testing a specific situation
+      org = create :organization
+      user = create :user, :admin
+      # 2. execute system under test
+      delete "/organizations/#{org.id}", headers: valid_headers(user)
+
+      # 3. assertion - verify that behavior is what i wanted
+      expect(response.status).to eq(204)
+      expect{ org.reload }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
   describe 'PUT /organizations/:id' do
-    let(:valid_attributes) { { name: 'HJCompany' } }
-
-    context 'when the record exists' do
-      before { put "/organizations/#{organization_id}", params: valid_attributes }
-
-      it 'updates the record' do
-        expect(response.body).to be_empty
-      end
-
-      it 'returns status code 204' do
-        expect(response).to have_http_status(204)
-      end
+    it "doesn't allow a non-admin user to update" do
+      org = create :organization
+      put "/organizations/#{org.id}", params: {name: "New Company"}.to_json, headers: valid_headers
+      expect(response.status).to eq(401)
+      expect(response.body).to eq("Unauthorized request")
     end
-  end
+    it "allows an admin user to update" do
+      org = create :organization
+      user = create :user, :admin
 
-  # Test for DELETE /todos/:id
-  describe 'DELETE /organizations/:id' do
-    before { delete "/organizations/#{organization_id}" }
+      put "/organizations/#{org.id}", params: {name: "New Company"}.to_json, headers: valid_headers(user)
 
-    it 'returns status code 204' do
-      expect(response).to have_http_status(204)
+      expect(response.status).to eq(204)
+      expect(Organization.find_by_name("New Company")).to be_present
     end
   end
 end

@@ -1,6 +1,6 @@
 class OrganizationsController < ApplicationController
   before_action :set_organization, only: [:show, :update, :destroy]
-
+  before_action :authorize_admin_request,only: [:create,:update,:destroy]
   # GET /organizations
   def index
     @organizations = Organization.all
@@ -11,11 +11,6 @@ class OrganizationsController < ApplicationController
   def create
     @organization = Organization.create!(organization_params)
     render json: @organization, status: :created
-  end
-
-  # GET /organizations/:id
-  def show
-    render json: @organization, status: :ok
   end
 
   # PUT /organizations/:id

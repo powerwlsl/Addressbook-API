@@ -4,6 +4,13 @@ Rails.application.routes.draw do
   end
 
   resources :organizations do
-    resources :organizationsusers
+    resources :organizationsusers, only: [:index,:create]
   end
+
+  namespace :admin do 
+    resources :organizations
+  end
+
+  post '/auth/login', to: 'authentication#authenticate'
+  post '/signup', to: 'users#create'
 end

@@ -1,4 +1,8 @@
 class AuthenticateUser
+  def self.create_token(user)
+    JsonWebToken.encode(user_id: user.id)
+  end
+
   def initialize(email, password)
     @email = email
     @password = password
@@ -6,7 +10,7 @@ class AuthenticateUser
 
   # Service entry point
   def call
-    JsonWebToken.encode(user_id: user.id) if user
+    self.class.create_token(user) if user
   end
 
   private
@@ -18,6 +22,6 @@ class AuthenticateUser
     user = User.find_by(email: email)
     return user if user && user.authenticate(password)
     # raise Authentication error if credentials are invalid
-    raise(ExceptionHandler::AuthenticationError, Message.invalid_credentials)
+    raise ExceptionHandler::AuthenticationError.new(Message.invalid_credentials)
   end
 end
