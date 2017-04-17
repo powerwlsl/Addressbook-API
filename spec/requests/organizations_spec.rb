@@ -42,7 +42,7 @@ RSpec.describe 'Organizations API', type: :request do
     end
   end
 
-  # Test for POST /organizations
+  # Test for DELETE /organizations
   describe 'DELETE /organizations' do
     it "doesn't allow a non-admin user to delete" do
       org = create :organization
@@ -79,35 +79,6 @@ RSpec.describe 'Organizations API', type: :request do
 
       expect(response.status).to eq(204)
       expect(Organization.find_by_name("New Company")).to be_present
-    end
-  end
-
-  describe 'GET /organizations/:id/users' do
-    context "when the user is not a member of the organization" do 
-      it "doesn't show other members of the organization" do
-        org = create_list(:organization, 3).first
-        create :user, :member1
-        create :user, :member2
-        user = create :user, :member3
-    
-        get "/organizations/#{org.id}/organizations_users", headers: valid_headers(user)
-
-        expect(response.status).to eq(401)
-        expect(response.body).to eq("Unauthorized request")
-      end
-    end
-
-    context "when the user is a member of the organization" do 
-      it "shows other members of the organization" do
-        org = create_list(:organization, 3).first
-        user = create :user, :member1
-        create :user, :member2
-        create :user, :member3
-        get "/organizations/#{org.id}/organizations_users", headers: valid_headers(user)
-
-        expect(response.status).to eq(200)
-        expect(Organization.find(org.id).users.count).to eq(2)
-      end
     end
   end
 end
