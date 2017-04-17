@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   end
 
   resources :organizations do
-    resources :organizations_users, only: [:index,:create]
+    resources :organizations_users, only: [:index,:create,:destroy]
   end
 
   namespace :admin do 
