@@ -1,16 +1,9 @@
 Rails.application.routes.draw do
-  resources :users do
-    resources :organizations_users
-  end
-
-  resources :organizations do
+  resources :organizations, only: [:index, :create, :destroy, :update] do
     resources :organizations_users, only: [:index,:create,:destroy]
   end
-
-  namespace :admin do 
-    resources :organizations
-  end
-
+  
+  
   post '/auth/login', to: 'authentication#authenticate'
   post '/signup', to: 'users#create'
 end
