@@ -11,15 +11,17 @@ RSpec.describe 'Users API', type: :request do
 
     context 'when valid request' do
       it 'creates a new user' do 
-        create_list(:organization, 3)
-        post '/signup', params: {email: user.email, password: user.password, password_confirmation:user.password, organization_ids: [1,2]}.to_json, headers: headers
+        org = create :organization
+
+        post '/signup', params: {email: user.email, password: user.password, password_confirmation:user.password, organization_ids: org.id}.to_json, headers: headers
         expect(response).to have_http_status(201)
         json = JSON.parse(response.body)
         expect(json['message']).to match(/Account created successfully/)
         expect(json['auth_token']).not_to be_nil
-        expect(User.last.organization_ids).to eq([1,2])
+        expect(User.last.organization_ids).to eq([org.id])
       end
     end
+
 
     context 'when invalid request' do
       before { post '/signup', params: {}, headers: headers }
